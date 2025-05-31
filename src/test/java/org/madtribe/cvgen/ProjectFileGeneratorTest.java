@@ -5,6 +5,7 @@ import org.junit.Test;
 import org.madtribe.cvgen.model.CVProject;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.File;
 import java.io.IOException;
 
 public class ProjectFileGeneratorTest {
@@ -35,4 +36,20 @@ public class ProjectFileGeneratorTest {
     }
 
 
+    @Test
+    public void test_init_project() throws IOException {
+        var tempFile = File.createTempFile("test","json");
+        var path = tempFile.getPath() + "1";
+        var outputFile = new File(path);
+
+        Assert.assertFalse(outputFile.exists());
+
+        boolean success = instance.init("m t", path);
+
+        Assert.assertTrue(outputFile.exists());
+        Assert.assertTrue(success);
+
+        success = instance.init("m t", path);
+        Assert.assertFalse(success);
+    }
 }

@@ -18,10 +18,13 @@ java -cp target/CVGenerator-1.0-SNAPSHOT.jar org.madtribe.cvgen.App
 
 ## Current Features
 
-None
+1. Create new project - initializes a project file
+```bash
+java -cp target/CVGenerator-1.0-SNAPSHOT.jar org.madtribe.cvgen.App -f cv2.json -i -n "Mad Tribe"
+```
 
 ## Planned Features
-1. Create new project - initializes a project file
+
 2. Add Role 
 3. Tag Role - 
 4. Add Project 
