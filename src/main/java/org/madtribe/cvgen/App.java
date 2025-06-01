@@ -1,11 +1,12 @@
 package org.madtribe.cvgen;
+import freemarker.template.TemplateException;
+import org.madtribe.cvgen.model.CVProject;
 import picocli.CommandLine;
 import picocli.CommandLine.Option;
 
+import java.io.FileWriter;
 import java.io.IOException;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class App implements Runnable{
 
     @Option(names = {"-f", "--file"}, description = "project file", required = true)
@@ -19,6 +20,12 @@ public class App implements Runnable{
 
     @Option(names = {"-n", "--fullName"}, description = "Full Name of CV owner")
     private String fullName = "empty";
+
+    @Option(names = {"-t", "--templateName"}, description = "Freemarker Template to use in templates folder. Defaults to cv_default_template.md")
+    private String templateName = "cv_default_template.md";
+
+    @Option(names = {"-o", "--output"}, description = "Output file to create")
+    private String outputFile;
 
 
     public static void main(String[] args) {
@@ -35,12 +42,28 @@ public class App implements Runnable{
         }
 
         try {
+            CVProject project = null;
             if (init) {
-                new ProjectFileGenerator().init(fullName,file);
+                project = new ProjectFileGenerator().init(fullName, file);
             }
-        } catch (IOException e) {
-            System.err.println("An Error Happened");
-            e.printStackTrace();
+
+            if (file != null) {
+                project = new ProjectFileLoader().load(file);
+            }
+
+            if (outputFile != null && project != null ) {
+                CVRenderer renderer = new CVRenderer();
+                try (var fileWriter = new FileWriter(outputFile)) {
+                    renderer.renderCV(project, templateName, fileWriter);
+                }
+            }
+
+        } catch (IOException | TemplateException e) {
+            System.err.printf("An Error Happened: %s", e.getMessage() );
+
+            if (verbose){
+                e.printStackTrace();
+            }
         }
     }
 

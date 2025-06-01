@@ -36,3 +36,6 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+cv.json
+cv1.md

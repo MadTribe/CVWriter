@@ -23,6 +23,18 @@ java -cp target/CVGenerator-1.0-SNAPSHOT.jar org.madtribe.cvgen.App
 java -cp target/CVGenerator-1.0-SNAPSHOT.jar org.madtribe.cvgen.App -f cv2.json -i -n "Mad Tribe"
 ```
 
+2, Generate CV
+
+Generate markdown based CV with the default template in the templates folder
+
+templates/cv_default_template.md
+
+```bash
+ java -cp target/CVGenerator-1.0-SNAPSHOT.jar org.madtribe.cvgen.App -f cv.json -o cv1.md
+```
+
+Use -t parameter to reference your own template in the templates folder.
+
 ## Planned Features
 
 2. Add Role 
@@ -34,5 +46,5 @@ java -cp target/CVGenerator-1.0-SNAPSHOT.jar org.madtribe.cvgen.App -f cv2.json 
 8. Add Summary
 9. Tag Summary
 10. Link CV template
-11. Generate project
+11. Generate CV
 

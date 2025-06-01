@@ -1,5 +1,7 @@
 package org.madtribe.cvgen;
 
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.Assert;
 import org.junit.Test;
 import org.madtribe.cvgen.model.CVProject;
@@ -24,7 +26,7 @@ public class ProjectFileGeneratorTest {
 
         Assert.assertNotNull(json);
 
-        ObjectMapper mapper = new ObjectMapper();
+        ObjectMapper mapper =  JsonMapper.builder().addModule(new JavaTimeModule()).build();
 
         CVProject project;
         try (var parser = mapper.createParser(json)){
@@ -44,12 +46,16 @@ public class ProjectFileGeneratorTest {
 
         Assert.assertFalse(outputFile.exists());
 
-        boolean success = instance.init("m t", path);
+        CVProject project = instance.init("m t", path);
 
         Assert.assertTrue(outputFile.exists());
-        Assert.assertTrue(success);
+        Assert.assertNotNull(project);
 
-        success = instance.init("m t", path);
-        Assert.assertFalse(success);
+        try {
+            instance.init("m t", path);
+            Assert.fail("Exception not thrown");
+        } catch (IOException e) {
+            // intentinoally empty
+        }
     }
 }
