@@ -1,67 +1,148 @@
+<#-- cv_template.ftlh -->
 <!DOCTYPE html>
 <html>
 <head>
-    <title>${cv.fullName}'s CV</title>
+    <title>${cv.fullName()}'s CV</title>
     <style>
-        body { font-family: sans-serif; }
-        .section { margin-bottom: 20px; }
-        h2 { border-bottom: 1px solid #ccc; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; }
+        h1 { font-size: 2.2em; margin-bottom: 5px; }
+        .subtitle { font-size: 1.4em; color: #444; }
+        .contact-info { margin: 15px 0; }
+        .section { margin-bottom: 25px; }
+        h2 { border-bottom: 2px solid #3498db; padding-bottom: 5px; color: #2c3e50; }
+        h3 { margin-bottom: 5px; color: #2980b9; }
+        .position-period { font-style: italic; color: #7f8c8d; margin-bottom: 8px; }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 8px; }
+        .skills-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .skill-category h4 { margin-bottom: 8px; color: #16a085; }
+        .achievement-list li::marker { content: "•"; color: #e74c3c; font-size: 1.2em; }
     </style>
 </head>
 <body>
-    <h1>${cv.fullName}</h1>
+    <div class="header">
+        <h1>${cv.fullName()}</h1>
+        <div class="subtitle">Curriculum Vitae - Technology Director</div>
 
-    <!-- Contact Section -->
-    <div class="section">
-        <h2>Contact</h2>
-        <p>Email: ${cv.contact.email}</p>
-        <p>Phone: ${cv.contact.phoneNumber}</p>
-        <p>LinkedIn: ${cv.contact.linkedIn}</p>
+        <div class="contact-info">
+            ${cv.contact().email()} |
+            ${cv.contact().phoneNumber()}<br>
+            ${cv.contact().linkedIn()} | London, UK
+        </div>
     </div>
 
-    <!-- Skills Section -->
+    <hr>
+
+    <#-- Professional Summary -->
     <div class="section">
-        <h2>Skills</h2>
-        <ul>
-            <#list cv.skills as skill>
-                <li>${skill.title}</li>
+        <h2>Professional Summary</h2>
+        <p>${cv.professionalSummary()}</p>
+    </div>
+
+    <#-- Key Achievements -->
+    <div class="section">
+        <h2>Key Achievements</h2>
+        <ul class="achievement-list">
+            <#list cv.keyAchievements() as achievement>
+                <li>${achievement}</li>
             </#list>
         </ul>
     </div>
 
-    <!-- Employment History -->
+    <#-- Professional Experience -->
     <div class="section">
-        <h2>Employment History</h2>
-        <#list cv.employers as employer>
-            <h3>${employer.name} - ${employer.location}</h3>
-            <p>${employer.period.from} to ${employer.period.to}</p>
+        <h2>Professional Experience</h2>
+        <#list cv.employers() as employer>
+            <div class="employer">
+                <h3>${employer.name()}</h3>
+                <div class="position-period">${employer.period().from()} to ${employer.period().to()}</div>
 
-            <h4>Positions:</h4>
-            <#list employer.position as position>
-                <p><strong>${position.title}</strong> (${position.period.from} - ${position.period.to})</p>
-                <p>${position.description}</p>
-            </#list>
+                <#list employer.positions() as position>
+                    <div class="position">
+                        <h4>${position.title()}</h4>
+                        <div class="position-period">${position.period().from()} to ${position.period().to()}</div>
 
-            <h4>Projects:</h4>
-            <#list employer.projects as project>
-                <p><strong>${project.title}</strong> (${project.period.from} - ${project.period.to})</p>
-                <p>${project.description}</p>
-                <p>Skills:
-                    <#list project.skills as skill>
-                        ${skill.title}<#sep>, </#sep>
-                    </#list>
-                </p>
-            </#list>
+                        <#if position.description()?has_content>
+                            <p>${position.description()}</p>
+                        </#if>
+
+                        <ul>
+                            <#list position.responsibilities() as responsibility>
+                                <li>${responsibility}</li>
+                            </#list>
+                        </ul>
+
+                        <#if position.projects()?has_content>
+                            <h5>Key Projects:</h5>
+                            <ul>
+                                <#list position.projects() as project>
+                                    <li>
+                                        <strong>${project.title()}</strong> - ${project.description()}
+                                        <#if project.achievements()?has_content>
+                                            <ul>
+                                                <#list project.achievements() as achievement>
+                                                    <li>${achievement}</li>
+                                                </#list>
+                                            </ul>
+                                        </#if>
+                                    </li>
+                                </#list>
+                            </ul>
+                        </#if>
+                    </div>
+                </#list>
+            </div>
         </#list>
     </div>
 
-    <!-- Education -->
+    <#-- Education -->
     <div class="section">
         <h2>Education</h2>
-        <#list cv.educations as education>
-            <p><strong>${education.title}</strong></p>
-            <p>${education.institution} (${education.period.from} - ${education.period.to})</p>
+        <#list cv.educations() as education>
+            <div class="education">
+                <h4>${education.title()}</h4>
+                <div class="institution">${education.institution()}</div>
+                <div class="period">${education.period().from()} to ${education.period().to()}</div>
+            </div>
         </#list>
+    </div>
+
+    <#-- Strategic & Leadership Skills -->
+    <div class="section">
+        <h2>Strategic & Leadership Skills</h2>
+        <ul>
+            <#list cv.leadershipSkills() as skill>
+                <li>${skill}</li>
+            </#list>
+        </ul>
+    </div>
+
+    <#-- Technical Skills -->
+    <div class="section">
+        <h2>Technical Skills</h2>
+        <div class="skills-grid">
+            <#list cv.technicalSkills()?keys as category>
+                <div class="skill-category">
+                    <h4>${category}</h4>
+                    <ul>
+                        <#list cv.technicalSkills()[category] as skill>
+                            <li>${skill}</li>
+                        </#list>
+                    </ul>
+                </div>
+            </#list>
+        </div>
+    </div>
+
+    <#-- Languages -->
+    <div class="section">
+        <h2>Languages</h2>
+        <ul>
+            <#list cv.spokenLanguages() as language>
+                <li>${language}</li>
+            </#list>
+        </ul>
     </div>
 </body>
 </html>
