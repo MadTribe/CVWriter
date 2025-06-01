@@ -62,11 +62,6 @@ public class ExampleDataGenerator {
                         "Established FordPass China team and FordLabs Shanghai",
                         "Drove $1.6M annual revenue by scaling regional delivery teams"
                 ),
-                List.of(
-                        "Global team leadership (up to 50 engineers)",
-                        "Technology strategy & digital transformation",
-                        "Client advisory for Fortune 500s"
-                ),
                 Map.of(
                         "Marketing Technologies", List.of("Adobe Marketing Cloud", "Adobe Analytics", "Google Analytics"),
                         "Languages", List.of("Java (8–13)", "TypeScript", "JavaScript", "Python3"),

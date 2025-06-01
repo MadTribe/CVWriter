@@ -58,15 +58,7 @@ ${position.description()}
 
 ---
 
-## **Strategic & Leadership Skills**
-
-<#list cv.leadershipSkills() as skill>
-* ${skill}
-  </#list>
-
----
-
-## **Technical Skills**
+## ** Skills**
 
 <#list cv.technicalSkills()?keys as category>
 ### **${category}**

@@ -12,7 +12,6 @@ public record CVProject(
         List<Education> educations,
         String professionalSummary,
         List<String> keyAchievements,
-        List<String> leadershipSkills,
         Map<String, List<String>> technicalSkills, // Categorized skills
         List<String> spokenLanguages
 ) {
@@ -23,7 +22,6 @@ public record CVProject(
                 Collections.emptyList(),
                 Collections.emptyList(),
                 "",
-                Collections.emptyList(),
                 Collections.emptyList(),
                 Map.of(),
                 Collections.emptyList()

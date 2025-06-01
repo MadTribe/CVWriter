@@ -108,17 +108,8 @@
         </#list>
     </div>
 
-    <#-- Strategic & Leadership Skills -->
-    <div class="section">
-        <h2>Strategic & Leadership Skills</h2>
-        <ul>
-            <#list cv.leadershipSkills() as skill>
-                <li>${skill}</li>
-            </#list>
-        </ul>
-    </div>
 
-    <#-- Technical Skills -->
+    <#-- Skills -->
     <div class="section">
         <h2>Technical Skills</h2>
         <div class="skills-grid">
