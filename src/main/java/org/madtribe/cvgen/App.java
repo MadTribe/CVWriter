@@ -15,6 +15,9 @@ public class App implements Runnable{
     @Option(names = {"-v", "--verbose"}, description = "Verbose mode")
     private boolean verbose;
 
+    @Option(names = {"-e", "--edit"}, description = "Edit CV")
+    private boolean edit;
+
     @Option(names = {"-i", "--initialise"}, description = "Initialize")
     private boolean init;
 
@@ -50,6 +53,15 @@ public class App implements Runnable{
             if (file != null) {
                 project = new ProjectFileLoader().load(file);
             }
+
+            if (edit) {
+                var editor = new CVEditor(project);
+                editor.start();
+                project = editor.getCV();
+                ProjectFileGenerator.writeUsingFiles(file,true,new ProjectFileGenerator().serializeProject(project));
+
+            }
+
 
             if (outputFile != null && project != null ) {
                 CVRenderer renderer = new CVRenderer();
