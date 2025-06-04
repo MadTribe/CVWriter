@@ -6,6 +6,8 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 
+import static java.util.Arrays.asList;
+
 public class CVEditor {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE;
     public static final String PERSONAL_INFO_OPT = "1";
@@ -404,7 +406,7 @@ public class CVEditor {
 
         while (loop) {
             var oldTags = new ArrayList<>(cv.tags());
-            print("Choose Tags: ");
+            println("Choose Tags: ");
             int idx = 1;
 
             for (String t : oldTags) {
@@ -627,9 +629,14 @@ public class CVEditor {
         cv = cv.withProfessionalSummary(sb.toString().trim());
     }
 
+    private CVProject.Achievement createAchievement(){
+
+        return null;
+    }
+
     // Key Achievements
     private void keyAchievementsMenu() {
-        List<String> achievements = cv.keyAchievements();
+        List<CVProject.Achievement> achievements = cv.keyAchievements();
         while (true) {
             println("\n--- Key Achievements ---");
             for (int i = 0; i < achievements.size(); i++) {
@@ -642,7 +649,7 @@ public class CVEditor {
             String input = getInput();
             if (input.equalsIgnoreCase("A")) {
                 print("Enter achievement: ");
-                achievements = appendToList(achievements, getInput());
+                achievements = appendToList(achievements,  createAchievement());
                 cv = cv.withKeyAchievements(achievements);
             } else if (input.equalsIgnoreCase("B")) {
                 return;
@@ -654,7 +661,7 @@ public class CVEditor {
                         String choice = getInput();
                         if (choice.equals("1")) {
                             print("New text: ");
-                            achievements = updateInList(achievements, index, getInput());
+                            achievements = updateInList(achievements, index, new CVProject.Achievement(getInput(), asList()));
                             cv = cv.withKeyAchievements(achievements);
                         } else if (choice.equals("2")) {
                             achievements = removeFromList(achievements, index);
@@ -728,7 +735,7 @@ public class CVEditor {
                 print("Skill name: ");
                 String skillName = getInput();
                 print("Tags (comma separated): ");
-                List<String> tags = Arrays.asList(getInput().split(","));
+                List<String> tags = chooseTags(new ArrayList<>());
 
                 categorySkills = appendToList(categorySkills,
                         new CVProject.Skill(skillName, tags));

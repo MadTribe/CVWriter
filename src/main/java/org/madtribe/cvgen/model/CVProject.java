@@ -14,7 +14,7 @@ public record CVProject(
         List<Employer> employers,
         List<Education> educations,
         String professionalSummary,
-        List<String> keyAchievements,
+        List<Achievement> keyAchievements,
         Map<String, List<Skill>> technicalSkills, // Categorized skills
         List<String> spokenLanguages,
         List<String>  tags

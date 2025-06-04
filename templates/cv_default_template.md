@@ -2,7 +2,7 @@
 # ${cv.fullName()} - Curriculum Vitae - Technology Director
 
 **${cv.contact().email()}** | ${cv.contact().phoneNumber()} |  
-${cv.contact().linkedIn()} | London, UK
+${cv.contact().linkedIn()} | Bath, UK
 
 ---
 
@@ -15,7 +15,7 @@ ${cv.professionalSummary()}
 ## **Key Achievements**
 
 <#list cv.keyAchievements() as achievement>
-* ${achievement}
+* ${achievement.name()}
   </#list>
 
 ---
@@ -40,7 +40,7 @@ ${position.description()}
 <#list position.projects() as project>
 * **${project.title()}**: ${project.description()}
   <#list project.achievements() as achievement>
-    * ${achievement}
+    * ${achievement.name()}
       </#list>
       </#list>
       </#if>
@@ -58,12 +58,12 @@ ${position.description()}
 
 ---
 
-## ** Skills**
+## **Skills**
 
 <#list cv.technicalSkills()?keys as category>
 ### **${category}**
 <#list cv.technicalSkills()[category] as skill>
-* ${skill}
+* ${skill.name()}
   </#list>
 
 </#list>
