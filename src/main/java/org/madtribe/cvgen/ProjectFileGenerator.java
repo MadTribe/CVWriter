@@ -28,7 +28,7 @@ public class ProjectFileGenerator {
 
         CVProject project = ExampleDataGenerator.generateSampleCV(fullName);
         String json = serializeProject(project);
-         writeUsingFiles( file, json);
+         writeUsingFiles( file, false, json);
         return project;
     }
 
@@ -36,15 +36,14 @@ public class ProjectFileGenerator {
         return objectMapper.writeValueAsString(input);
     }
 
-    private static boolean writeUsingFiles(String path, String data) throws IOException {
+    public static void writeUsingFiles(String path, boolean overwrite, String data) throws IOException {
         Path filePath = Paths.get(path);
 
-        if (filePath.toFile().exists()){
+        if (filePath.toFile().exists() && !overwrite) {
             System.err.println("File Already Exists");
             throw new FileAlreadyExistsException(path);
         }
 
         Files.write(filePath, data.getBytes());
-        return true;
     }
 }
