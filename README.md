@@ -56,16 +56,10 @@ templates/cv_default_template.md
 
 Use -t parameter to reference your own template in the templates folder.
 
+The following features can be accessed through the simple interactive editor  
+
+
+
 ## Planned Features
 
-2. Add Role 
-3. Tag Role - 
-4. Add Project 
-5. Tag Project 
-6. Add Skill 
-7. Tag Skill
-8. Add Summary
-9. Tag Summary
-10. Link CV template
-11. Generate CV
 

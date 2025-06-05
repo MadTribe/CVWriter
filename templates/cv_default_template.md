@@ -26,7 +26,7 @@ ${cv.professionalSummary()}
 ### **${employer.name()}** (${employer.location()})
 
 <#list employer.positions() as position>
-**${position.title()}** (${position.period().from()}–${position.period().to()})
+**${position.title()}** (${position.period().from()} to ${position.period().to()})
 <#if position.description()?has_content>
 ${position.description()}
 </#if>
@@ -53,7 +53,7 @@ ${position.description()}
 
 <#list cv.educations() as education>
 * **${education.title()}**  
-  ${education.institution()} (${education.period().from()}–${education.period().to()})
+  ${education.institution()} (${education.period().from()} to ${education.period().to()})
   </#list>
 
 ---
