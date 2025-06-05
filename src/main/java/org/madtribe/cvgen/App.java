@@ -26,7 +26,7 @@ public class App implements Runnable{
     private boolean listTags;
 
     @Option(names = {"-q", "--filter-tags"}, description = "Filter on Tags comma separated")
-    private String filterTags;
+    private String filterTags = "";
 
 
     @Option(names = {"-n", "--fullName"}, description = "Full Name of CV owner")
@@ -74,7 +74,7 @@ public class App implements Runnable{
                 System.out.println(project.tags());
             }
 
-            if (filterTags != null && project != null ){
+            if (project != null ){
                 project = CVFilter.filter(project, Arrays.asList(filterTags.split(",")));
             }
 
