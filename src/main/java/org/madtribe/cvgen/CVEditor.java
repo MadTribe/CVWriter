@@ -776,6 +776,26 @@ public class CVEditor {
     private void skillItemMenu(String category, int index) {
         // Implementation similar to other item editors
         // Full implementation in final code
+
+        while (true){
+            println(this.cv.technicalSkills().get(category).get(index).name());
+            println("B. back");
+
+            String input = getInput().toUpperCase();
+            if (input.equalsIgnoreCase("B")) {
+                break;
+            }
+
+            if (input.equalsIgnoreCase("D")) {
+                var techSkills = cv.technicalSkills();
+                var skills = removeFromList(this.cv.technicalSkills().get(category),index);
+
+                techSkills.put(category, skills);
+
+                cv = cv.withTechnicalSkills(techSkills);
+            }
+
+        }
     }
 
     // Spoken Languages
