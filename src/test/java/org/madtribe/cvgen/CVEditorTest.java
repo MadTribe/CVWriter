@@ -24,7 +24,7 @@ public class CVEditorTest {
 
     @Test
     public void start_then_quit() {
-        instance.responses.add("X");
+        instance.responses.add(EXIT);
         instance.start();
         assertEquals("MadTribe",instance.getCV().fullName());
     }
@@ -35,7 +35,7 @@ public class CVEditorTest {
         instance.responses.add("1");
         instance.responses.add("Sane Individual");
         instance.responses.add("B");
-        instance.responses.add("X");
+        instance.responses.add(EXIT);
         instance.start();
         assertEquals("Sane Individual",instance.getCV().fullName());
     }
@@ -70,7 +70,7 @@ public class CVEditorTest {
         instance.responses.add(BACK_OPT);
         instance.responses.add(BACK_OPT); // Back to employer
         instance.responses.add(BACK_OPT); // Back to main
-        instance.responses.add("X");
+        instance.responses.add(EXIT);
 
         instance.start();
         assertEquals("MadTribe",instance.getCV().fullName());

@@ -14,6 +14,7 @@ public record CVProject(
         List<Employer> employers,
         List<Education> educations,
         String professionalSummary,
+        List<ProfessionalSummary> professionalSummaries,
         List<Achievement> keyAchievements,
         Map<String, List<Skill>> technicalSkills, // Categorized skills
         List<String> spokenLanguages,
@@ -27,6 +28,7 @@ public record CVProject(
                 Collections.emptyList(),
                 "",
                 Collections.emptyList(),
+                Collections.emptyList(),
                 Map.of(),
                 Collections.emptyList(),
                 Collections.emptyList()
@@ -39,6 +41,12 @@ public record CVProject(
 
     @With
     public record Period(LocalDate from, LocalDate to) {}
+
+    @With
+    public record ProfessionalSummary(String text,
+                        List<String> tags) {
+
+    }
 
     @With
     public record Employer(

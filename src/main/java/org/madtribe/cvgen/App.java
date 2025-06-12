@@ -6,12 +6,16 @@ import picocli.CommandLine.Option;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 public class App implements Runnable{
 
-    @Option(names = {"-f", "--file"}, description = "project file", required = true)
+    @Option(names = {"-f", "--file"}, description = "project file")
     private String file;
+
+    @Option(names = {"-F", "--folder"}, description = "project folder")
+    private String folder;
 
     @Option(names = {"-v", "--verbose"}, description = "Verbose mode")
     private boolean verbose;
@@ -62,11 +66,22 @@ public class App implements Runnable{
                 project = new ProjectFileLoader().load(file);
             }
 
+            if (folder != null) {
+                project = CVProjectExporterImporter.importCV(Path.of(folder));
+            }
+
+
             if (edit) {
                 var editor = new CVEditor(project);
                 editor.start();
                 project = editor.getCV();
-                ProjectFileGenerator.writeUsingFiles(file,true,new ProjectFileGenerator().serializeProject(project));
+                if (file != null) {
+                    ProjectFileGenerator.writeUsingFiles(Utils.addTimestampToFileName(file), true, new ProjectFileGenerator().serializeProject(project));
+                }
+
+                if (folder != null) {
+                    CVProjectExporterImporter.export(project, Path.of(Utils.addTimestampToFileName(folder)));
+                }
 
             }
 

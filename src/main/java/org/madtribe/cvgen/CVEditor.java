@@ -1,6 +1,8 @@
 package org.madtribe.cvgen;
 import org.madtribe.cvgen.model.CVProject;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -11,6 +13,7 @@ import static java.util.Arrays.asList;
 public class CVEditor {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE;
     public static final String PERSONAL_INFO_OPT = "1";
+    public static final String EXIT = "Q";
     public static final String EMPLOYERS_OPT = "2";
     public static final String ADD_OPT = "A";
     public static final String BACK_OPT = "B";
@@ -51,7 +54,9 @@ public class CVEditor {
             println("6. Technical Skills");
             println("7. Spoken Languages");
             println("P. View Complete CV");
-            println("X. Exit and Save");
+
+            println("Q. Quit editor");
+            println("X. Export to folders");
             print("Select option: ");
 
             switch (getInput()) {
@@ -80,6 +85,13 @@ public class CVEditor {
                     printCV();
                     break;
                 case "X":
+                    try {
+                        CVProjectExporterImporter.export(this.cv, Path.of("./out"));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case "Q":
                     return;
                 default:
                     println("Invalid option");
