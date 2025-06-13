@@ -125,6 +125,7 @@ public class CVFilter {
                 .filter(t -> tagSet.isEmpty() || tagSet.contains(t))
                 .collect(Collectors.toList());
 
+        
         // 7. Reconstruct and return a new CVProject with all filtered/sorted bits
         return original
                 .withEmployers(filteredEmployers)

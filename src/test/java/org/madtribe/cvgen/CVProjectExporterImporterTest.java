@@ -1,11 +1,16 @@
 package org.madtribe.cvgen;
-
+import org.junit.Before;
+import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.madtribe.cvgen.model.CVProject;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,10 +20,15 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.*;
 
-class CVProjectExporterImporterTest {
+public class CVProjectExporterImporterTest {
 
     @TempDir
     Path tempDir;
+
+    @Before
+    public void setup() throws IOException {
+        tempDir = Files.createTempDirectory("cvexportertest");
+    }
 
     // Helper method to create a sample CVProject
     private CVProject createSampleCV() {
@@ -54,6 +64,14 @@ class CVProjectExporterImporterTest {
                 List.of("devops", "automation")
         );
 
+        CVProject.ProfessionalSummary professionalSummary1 = new CVProject.ProfessionalSummary(
+                "Experienced software engineer with 5+ years in backend development",
+                List.of("devops", "automation")
+        );
+        CVProject.ProfessionalSummary professionalSummary2 = new CVProject.ProfessionalSummary(
+                "Experienced software engineer with 5+ years in backend development",
+                List.of("devops", "automation")
+        );
         // Project
         CVProject.Project project = new CVProject.Project(
                 "E-commerce Platform",
@@ -88,7 +106,7 @@ class CVProjectExporterImporterTest {
                 List.of(employer),
                 List.of(education),
                 "Experienced software engineer with 5+ years in backend development",
-                Collections.emptyList(), // TODO
+                List.of(professionalSummary1,professionalSummary2),
                 List.of(achievement1, achievement2),
                 technicalSkills,
                 List.of("English", "Spanish"),
@@ -97,7 +115,7 @@ class CVProjectExporterImporterTest {
     }
 
     @Test
-    void testExportImportRoundTrip() throws Exception {
+    public void testExportImportRoundTrip() throws Exception {
         // Create sample CV
         CVProject original = createSampleCV();
 
@@ -112,7 +130,7 @@ class CVProjectExporterImporterTest {
     }
 
     @Test
-    void testEmptyCVExportImport() throws Exception {
+    public void testEmptyCVExportImport() throws Exception {
         // Create minimal CV with just a name
         CVProject minimalCV = new CVProject("Jane Smith");
 
@@ -126,12 +144,13 @@ class CVProjectExporterImporterTest {
         assertEquals(minimalCV.fullName(), imported.fullName());
         assertTrue(imported.employers().isEmpty());
         assertTrue(imported.educations().isEmpty());
+        assertTrue(imported.professionalSummaries().isEmpty());
         assertTrue(imported.keyAchievements().isEmpty());
         assertTrue(imported.technicalSkills().isEmpty());
     }
 
     @Test
-    void testContactInformation() throws Exception {
+    public void testContactInformation() throws Exception {
         CVProject.Contact contact = new CVProject.Contact("555-1234", "test@example.com", "linkedin.com/test");
         CVProject cv = new CVProject("Contact Test")
                 .withContact(contact);
@@ -143,7 +162,7 @@ class CVProjectExporterImporterTest {
     }
 
     @Test
-    void testMultipleEmployers() throws Exception {
+    public void testMultipleEmployers() throws Exception {
         CVProject.Employer employer1 = new CVProject.Employer(
                 "Company A",
                 "Location A",
@@ -170,7 +189,7 @@ class CVProjectExporterImporterTest {
     }
 
     @Test
-    void testNestedProjects() throws Exception {
+    public void testNestedProjects() throws Exception {
         CVProject.Project project1 = new CVProject.Project(
                 "Project Alpha",
                 "First project description",
@@ -224,7 +243,7 @@ class CVProjectExporterImporterTest {
     }
 
     @Test
-    void testTechnicalSkillsCategories() throws Exception {
+    public void testTechnicalSkillsCategories() throws Exception {
         CVProject.Skill skill1 = new CVProject.Skill("Python", List.of("backend"));
         CVProject.Skill skill2 = new CVProject.Skill("JavaScript", List.of("frontend"));
         CVProject.Skill skill3 = new CVProject.Skill("Docker", List.of("devops"));
@@ -246,7 +265,7 @@ class CVProjectExporterImporterTest {
     }
 
     @Test
-    void testAchievementsWithTags() throws Exception {
+    public void testAchievementsWithTags() throws Exception {
         CVProject.Achievement achievement1 = new CVProject.Achievement(
                 "Innovation Award 2022",
                 List.of("recognition", "award")
@@ -269,7 +288,36 @@ class CVProjectExporterImporterTest {
     }
 
     @Test
-    void testDateHandling() throws Exception {
+    public void testProfessionalSummaryWithTags() throws Exception {
+
+        CVProject.ProfessionalSummary professionalSummary1 = new CVProject.ProfessionalSummary(
+                "sum1",
+                List.of("tag1", "tag2")
+        );
+        CVProject.ProfessionalSummary professionalSummary2 = new CVProject.ProfessionalSummary(
+                "sum2",
+                List.of("tag3", "tag4")
+        );
+
+        CVProject cv = new CVProject("Summary Test")
+                .withProfessionalSummaries(List.of(professionalSummary1, professionalSummary2));
+
+        CVProjectExporterImporter.export(cv, tempDir);
+
+        printPathAndContents(tempDir);
+
+        CVProject imported = CVProjectExporterImporter.importCV(tempDir);
+
+        var professionalSummaries = imported.professionalSummaries();
+        assertEquals(2, professionalSummaries.size());
+        assertEquals("sum1", professionalSummaries.get(0).text());
+        assertEquals("sum2", professionalSummaries.get(1).text());
+        assertEquals(List.of("tag1", "tag2"), professionalSummaries.get(0).tags());
+        assertEquals(List.of("tag3", "tag4"), professionalSummaries.get(1).tags());
+    }
+
+    @Test
+    public void testDateHandling() throws Exception {
         LocalDate start = LocalDate.of(2020, 1, 15);
         LocalDate end = LocalDate.of(2023, 8, 31);
 
@@ -292,7 +340,7 @@ class CVProjectExporterImporterTest {
     }
 
     @Test
-    void testEmptyCollections() throws Exception {
+    public void testEmptyCollections() throws Exception {
         CVProject cv = new CVProject("Empty Collections Test")
                 .withEmployers(Collections.emptyList())
                 .withEducations(Collections.emptyList())
@@ -313,7 +361,7 @@ class CVProjectExporterImporterTest {
     }
 
     @Test
-    void testSpecialCharactersInFilenames() throws Exception {
+    public void testSpecialCharactersInFilenames() throws Exception {
         // Category name with special characters
         Map<String, List<CVProject.Skill>> skills = Map.of(
                 "Cloud & DevOps", List.of(new CVProject.Skill("AWS", List.of("cloud")))
@@ -330,7 +378,7 @@ class CVProjectExporterImporterTest {
     }
 
     @Test
-    void testLargeDataSet() throws Exception {
+    public void testLargeDataSet() throws Exception {
         // Create a CV with multiple employers, each with multiple positions, etc.
         List<CVProject.Employer> employers = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
@@ -380,4 +428,24 @@ class CVProjectExporterImporterTest {
 
         System.out.printf("Large dataset test - Export: %dms, Import: %dms%n", exportTime, importTime);
     }
+
+    public static void printPathAndContents(Path path) throws IOException {
+        if (Files.isDirectory(path)) {
+            System.out.println("Directory: " + path.toAbsolutePath());
+            try (DirectoryStream<Path> stream = Files.newDirectoryStream(path)) {
+                for (Path entry : stream) {
+                    printPathAndContents(entry); // Recursive call
+                }
+            }
+        } else if (Files.isRegularFile(path)) {
+            System.out.println("File: " + path.toAbsolutePath());
+            try {
+                Files.lines(path, StandardCharsets.UTF_8).forEach(System.out::println);
+            } catch (IOException e) {
+                System.err.println("Error reading file: " + path + " - " + e.getMessage());
+            }
+            System.out.println(); // Blank line for readability
+        }
+    }
+
 }

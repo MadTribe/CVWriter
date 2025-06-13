@@ -1,4 +1,4 @@
-package org.madtribe.cvgen.filter;
+package org.madtribe.cvgen;
 
 import org.junit.Test;
 import org.madtribe.cvgen.CVFilter;

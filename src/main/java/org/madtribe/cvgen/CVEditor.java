@@ -14,6 +14,7 @@ public class CVEditor {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE;
     public static final String PERSONAL_INFO_OPT = "1";
     public static final String EXIT = "Q";
+
     public static final String EMPLOYERS_OPT = "2";
     public static final String ADD_OPT = "A";
     public static final String BACK_OPT = "B";

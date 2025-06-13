@@ -13,14 +13,6 @@ import org.madtribe.cvgen.model.CVProject;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.DumperOptions;
 
-import java.io.IOException;
-import java.nio.file.*;
-import java.time.LocalDate;
-import java.util.*;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.nodes.Node;
 import org.yaml.snakeyaml.nodes.Tag;
 import org.yaml.snakeyaml.representer.Represent;
@@ -41,6 +33,7 @@ public class CVProjectExporterImporter {
     public static void export(CVProject cv, Path rootDir) throws IOException {
         Files.createDirectories(rootDir);
         writeRootDetails(cv, rootDir);
+        exportProfessionalSummaries(cv,rootDir);
         exportEmployers(cv, rootDir);
         exportEducations(cv, rootDir);
         exportAchievements(cv, rootDir);
@@ -86,7 +79,7 @@ public class CVProjectExporterImporter {
         data.put("professionalSummary", cv.professionalSummary());
         data.put("spokenLanguages", cv.spokenLanguages());
         data.put("tags", cv.tags());
-        writeYamlFile(rootDir.resolve("details.md"), data, "");
+        writeMarkdownFile(rootDir.resolve("details.md"), data, "");
     }
 
     private static void exportEmployers(CVProject cv, Path rootDir) throws IOException {
@@ -96,7 +89,7 @@ public class CVProjectExporterImporter {
 
         for (int i = 0; i < cv.employers().size(); i++) {
             CVProject.Employer emp = cv.employers().get(i);
-            String dirName = "employer_" + i;
+            String dirName = sanitizeFilename(emp.name());
             Path empDir = employersDir.resolve(dirName);
             Files.createDirectories(empDir);
             employerDirs.add(dirName);
@@ -106,7 +99,7 @@ public class CVProjectExporterImporter {
             empData.put("name", emp.name());
             empData.put("location", emp.location());
             empData.put("period", emp.period());
-            writeYamlFile(empDir.resolve("details.md"), empData,"");
+            writeMarkdownFile(empDir.resolve("details.md"), empData,"");
 
             // Export positions
             Path positionsDir = empDir.resolve("positions");
@@ -115,7 +108,7 @@ public class CVProjectExporterImporter {
 
             for (int j = 0; j < emp.positions().size(); j++) {
                 CVProject.Position pos = emp.positions().get(j);
-                String posDirName = "position_" + j;
+                String posDirName = sanitizeFilename(j + "" + pos.title());
                 Path posDir = positionsDir.resolve(posDirName);
                 Files.createDirectories(posDir);
                 positionDirs.add(posDirName);
@@ -125,7 +118,7 @@ public class CVProjectExporterImporter {
                 posData.put("title", pos.title());
                 posData.put("period", pos.period());
                 posData.put("responsibilities", pos.responsibilities());
-                writeYamlFile(posDir.resolve("details.md"), posData,pos.description());
+                writeMarkdownFile(posDir.resolve("details.md"), posData,pos.description());
 
                 // Export projects
                 Path projectsDir = posDir.resolve("projects");
@@ -134,12 +127,12 @@ public class CVProjectExporterImporter {
 
                 for (int k = 0; k < pos.projects().size(); k++) {
                     CVProject.Project proj = pos.projects().get(k);
-                    String projFileName = "project_" + k + ".md";
+                    String projFileName = sanitizeFilename(proj.title()) + ".md";
                     Map<String, Object> projData = new LinkedHashMap<>();
                     projData.put("title", proj.title());
                     projData.put("achievements", proj.achievements());
                     projData.put("tags", proj.tags());
-                    writeYamlFile(projectsDir.resolve(projFileName), projData, proj.description());
+                    writeMarkdownFile(projectsDir.resolve(projFileName), projData, proj.description());
                     projectFiles.add(projFileName);
                 }
 
@@ -162,16 +155,32 @@ public class CVProjectExporterImporter {
 
         for (int i = 0; i < cv.educations().size(); i++) {
             CVProject.Education edu = cv.educations().get(i);
-            String fileName = "education_" + i + ".md";
+            String fileName = sanitizeFilename(edu.title()) + ".md";
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("title", edu.title());
             data.put("institution", edu.institution());
             data.put("period", edu.period());
-            writeYamlFile(educationsDir.resolve(fileName), data,"");
+            writeMarkdownFile(educationsDir.resolve(fileName), data,"");
             educationFiles.add(fileName);
         }
 
         writeIndexFile(educationsDir, educationFiles);
+    }
+    private static void exportProfessionalSummaries(CVProject cv, Path rootDir) throws IOException {
+        Path prof = rootDir.resolve("professionalSummaries");
+        Files.createDirectories(prof);
+        List<String> professionalSummaryFileNames = new ArrayList<>();
+
+        for (int i = 0; i < cv.professionalSummaries().size(); i++) {
+            CVProject.ProfessionalSummary ach = cv.professionalSummaries().get(i);
+            String fileName = "summary_" + i + ".md";
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("tags", ach.tags());
+            writeMarkdownFile(prof.resolve(fileName), data,ach.text());
+            professionalSummaryFileNames.add(fileName);
+        }
+
+        writeIndexFile(prof, professionalSummaryFileNames);
     }
 
     private static void exportAchievements(CVProject cv, Path rootDir) throws IOException {
@@ -184,7 +193,7 @@ public class CVProjectExporterImporter {
             String fileName = "achievement_" + i + ".md";
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("tags", ach.tags());
-            writeYamlFile(achievementsDir.resolve(fileName), data,ach.name());
+            writeMarkdownFile(achievementsDir.resolve(fileName), data,ach.name());
             achievementFiles.add(fileName);
         }
 
@@ -201,19 +210,19 @@ public class CVProjectExporterImporter {
             Map<String, Object> data = new LinkedHashMap<>();
             data.put("category", category);
             data.put("skills", entry.getValue());
-            writeYamlFile(techSkillsDir.resolve(fileName), data,"");
+            writeMarkdownFile(techSkillsDir.resolve(fileName), data,"");
         }
     }
 
-    private static void writeYamlFile(Path file, Object data, String markdownBody) throws IOException {
-        String yamlStr = yaml.dump(data);
+    private static void writeMarkdownFile(Path file, Object frontMatter, String markdownBody) throws IOException {
+        String yamlStr = yaml.dump(frontMatter);
         Files.writeString(file, "---\n" + yamlStr + "---\n" + markdownBody, StandardOpenOption.CREATE);
     }
 
     private static void writeIndexFile(Path dir, List<String> items) throws IOException {
         Map<String, Object> indexData = new LinkedHashMap<>();
         indexData.put("order", items);
-        writeYamlFile(dir.resolve("_index.md"), indexData, "");
+        writeMarkdownFile(dir.resolve("_index.md"), indexData, "");
     }
 
     private static String sanitizeFilename(String name) {
@@ -222,7 +231,7 @@ public class CVProjectExporterImporter {
 
     // Import folder structure back to CVProject
     public static CVProject importCV(Path rootDir) throws IOException {
-        Map<String, Object> rootData = readYamlFile(rootDir.resolve("details.md"));
+        Map<String, Object> rootData = readMarkdownFile(rootDir.resolve("details.md")).frontMatter;
         CVProject cv = new CVProject((String) rootData.get("fullName"))
                 .withContact(convertMap((Map<String, ?>) rootData.get("contact"), CVProject.Contact.class))
                 .withProfessionalSummary((String) rootData.get("professionalSummary"))
@@ -243,7 +252,7 @@ public class CVProjectExporterImporter {
 
         for (String dirName : dirs) {
             Path empDir = employersDir.resolve(dirName);
-            Map<String, Object> empData = readYamlFile(empDir.resolve("details.md"));
+            Map<String, Object> empData = readMarkdownFile(empDir.resolve("details.md")).frontMatter;
             List<CVProject.Position> positions = importPositions(empDir.resolve("positions"));
             employers.add(new CVProject.Employer(
                     (String) empData.get("name"),
@@ -261,12 +270,14 @@ public class CVProjectExporterImporter {
 
         for (String dirName : dirs) {
             Path posDir = positionsDir.resolve(dirName);
-            Map<String, Object> posData = readYamlFile(posDir.resolve("details.md"));
+            MarkdownFile mdfile = readMarkdownFile(posDir.resolve("details.md"));
             List<CVProject.Project> projects = importProjects(posDir.resolve("projects"));
+            Map<String,Object> posData = mdfile.frontMatter();
+
             positions.add(new CVProject.Position(
                     (String) posData.get("title"),
                     convertMap((Map<String, ?>) posData.get("period"), CVProject.Period.class),
-                    (String) posData.get("description"),
+                    mdfile.markdown(),
                     (List<String>) posData.get("responsibilities"),
                     projects
             ));
@@ -279,10 +290,11 @@ public class CVProjectExporterImporter {
         return files.stream()
                 .map(fileName -> {
                     try {
-                        Map<String, Object> projData = readYamlFile(projectsDir.resolve(fileName));
+                        MarkdownFile projMd = readMarkdownFile(projectsDir.resolve(fileName));
+                        Map<String, Object> projData = projMd.frontMatter();
                         return new CVProject.Project(
                                 (String) projData.get("title"),
-                                (String) projData.get("description"),
+                                projMd.markdown(),
                                 convertList((List<?>) projData.get("achievements"), CVProject.Achievement.class),
                                 (List<String>) projData.get("tags")
                         );
@@ -297,7 +309,7 @@ public class CVProjectExporterImporter {
         return getOrderedItems(educationsDir).stream()
                 .map(fileName -> {
                     try {
-                        Map<String, Object> data = readYamlFile(educationsDir.resolve(fileName));
+                        Map<String, Object> data = readMarkdownFile(educationsDir.resolve(fileName)).frontMatter();
                         return new CVProject.Education(
                                 (String) data.get("title"),
                                 (String) data.get("institution"),
@@ -314,9 +326,10 @@ public class CVProjectExporterImporter {
         return getOrderedItems(achievementsDir).stream()
                 .map(fileName -> {
                     try {
-                        Map<String, Object> data = readYamlFile(achievementsDir.resolve(fileName));
+                        MarkdownFile achMd = readMarkdownFile(achievementsDir.resolve(fileName));
+                        Map<String, Object> data = achMd.frontMatter();
                         return new CVProject.Achievement(
-                                (String) data.get("name"),
+                                achMd.markdown(),
                                 (List<String>) data.get("tags")
                         );
                     } catch (IOException e) {
@@ -330,7 +343,7 @@ public class CVProjectExporterImporter {
         Map<String, List<CVProject.Skill>> skillsMap = new HashMap<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(techSkillsDir, "*.md")) {
             for (Path file : stream) {
-                Map<String, Object> data = readYamlFile(file);
+                Map<String, Object> data = readMarkdownFile(file).frontMatter();
                 System.out.println("read file " + data);
                 String category = (String) data.get("category");
                 System.out.println(data.get("skills"));
@@ -341,27 +354,32 @@ public class CVProjectExporterImporter {
         return skillsMap;
     }
     private static List<CVProject.ProfessionalSummary> importProfessionalSummary(Path professionalSummaryDir) throws IOException {
-        List<CVProject.ProfessionalSummary> skillsMap = new ArrayList<>();
-        try (DirectoryStream<Path> stream = Files.newDirectoryStream(professionalSummaryDir, "*.md")) {
+        List<CVProject.ProfessionalSummary> summaries = new ArrayList<>();
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(professionalSummaryDir, "summary*.md")) {
             for (Path file : stream) {
-                Map<String, Object> data = readYamlFile(file);
-                List<CVProject.ProfessionalSummary> skills = convertList((List<CVProject.ProfessionalSummary>) data.get("skills"), CVProject.ProfessionalSummary.class);
+                MarkdownFile mdFile = readMarkdownFile(file);
+                System.out.println(file + " =  " + mdFile);
+                CVProject.ProfessionalSummary summary = convertMap(mdFile.frontMatter,CVProject.ProfessionalSummary.class);
+                summary = summary.withText(mdFile.markdown());
+                summaries.add(summary);
             }
         }
-        return skillsMap;
+        return summaries;
     }
     private static List<String> getOrderedItems(Path dir) throws IOException {
-        Map<String, Object> index = readYamlFile(dir.resolve("_index.md"));
+        Map<String, Object> index = readMarkdownFile(dir.resolve("_index.md")).frontMatter;
         return (List<String>) index.get("order");
     }
 
-    private static Map<String, Object> readYamlFile(Path file) throws IOException {
+    private static MarkdownFile readMarkdownFile(Path file) throws IOException {
+
         String content = Files.readString(file);
-        Pattern pattern = Pattern.compile("^---\\n(.+?)\\n---\\n", Pattern.DOTALL);
+        Pattern pattern = Pattern.compile("^---\\R(.*?)^---\\R(.*)", Pattern.DOTALL | Pattern.MULTILINE);
         var matcher = pattern.matcher(content);
         if (matcher.find()) {
-            String yamlContent = matcher.group(1);
-            return yaml.load(yamlContent);
+            String yamlContent = matcher.group(1).replaceFirst("\\R$", "");
+            String markdownContent = matcher.group(2);
+            return new MarkdownFile(yaml.load(yamlContent), markdownContent);
         }
         throw new IOException("Invalid YAML front matter in " + file);
     }
@@ -435,6 +453,9 @@ public class CVProjectExporterImporter {
             }
         }
         return Object.class;
+    }
+
+    public record MarkdownFile( Map<String, Object> frontMatter, String markdown){
     }
 
 }
