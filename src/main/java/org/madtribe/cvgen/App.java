@@ -80,7 +80,8 @@ public class App implements Runnable{
                 }
 
                 if (folder != null) {
-                    CVProjectExporterImporter.export(project, Path.of(Utils.addTimestampToFileName(folder)));
+                    Utils.copyFolder(Path.of(folder),Path.of(Utils.addTimestampToFileName(folder)+ "bk"));
+                    CVProjectExporterImporter.export(project, Path.of(folder));
                 }
 
             }
@@ -89,7 +90,7 @@ public class App implements Runnable{
                 System.out.println(project.tags());
             }
 
-            if (project != null ){
+            if (project != null && !filterTags.equalsIgnoreCase("")){
                 project = CVFilter.filter(project, Arrays.asList(filterTags.split(",")));
             }
 
