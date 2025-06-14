@@ -16,127 +16,117 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
+
 public class CVFilterTest {
 
     @Test
-    public void testFilterByTagsAndSorting() {
-        // --- Build sample Achievements with tags ---
-        Achievement achJava = new Achievement("Achievement Java", List.of("java"));
-        Achievement achPython = new Achievement("Achievement Python", List.of("python"));
+    public void testFilterOnly() {
+        Achievement javaAch = new Achievement("Ach Java", List.of("java"));
+        Achievement pythonAch = new Achievement("Ach Python", List.of("python"));
 
-        // --- Build sample Projects with tags and nested achievements ---
-        Project projectJava = new Project(
-                "Project Java",
-                "Java project description",
-                List.of(achJava),
-                List.of("java")
-        );
-        Project projectPython = new Project(
-                "Project Python",
-                "Python project description",
-                List.of(achPython),
-                List.of("python")
-        );
+        Project javaProject = new Project("Java Project", "desc", List.of(javaAch), List.of("java"));
+        Project pythonProject = new Project("Python Project", "desc", List.of(pythonAch), List.of("python"));
 
-        // --- Build a Position containing both projects; period ends 2023-12-31 ---
-        Position positionDev = new Position(
-                "Developer",
+        Position position = new Position("Dev",
                 new Period(LocalDate.of(2023, 1, 1), LocalDate.of(2023, 12, 31)),
-                "Developed software",
-                List.of("Coding", "Unit tests"),
-                List.of(projectJava, projectPython)
-        );
+                "desc",
+                List.of(),
+                List.of(javaProject, pythonProject));
 
-        // --- Employer A: period ends 2023-12-31, has one position ---
-        Employer employerA = new Employer(
-                "CompanyA",
-                "CityA",
+        Employer employer = new Employer("Company", "City",
                 new Period(LocalDate.of(2022, 1, 1), LocalDate.of(2023, 12, 31)),
-                List.of(positionDev)
+                List.of(position));
+
+        Skill javaSkill = new Skill("Java", List.of("java"));
+        Skill pythonSkill = new Skill("Python", List.of("python"));
+
+        CVProject base = new CVProject("Tester")
+                .withEmployers(List.of(employer))
+                .withKeyAchievements(List.of(javaAch, pythonAch))
+                .withTechnicalSkills(Map.of("Languages", List.of(javaSkill, pythonSkill)))
+                .withTags(List.of("java", "python"));
+
+        CVProject filtered = CVFilter.filter(base, List.of("java"));
+
+        // Should filter out python-related items
+        assertEquals(1, filtered.employers().size());
+        Employer filteredEmployer = filtered.employers().get(0);
+        assertEquals(1, filteredEmployer.positions().size());
+        assertEquals(1, filteredEmployer.positions().get(0).projects().size());
+        assertEquals("Java Project", filteredEmployer.positions().get(0).projects().get(0).title());
+        assertEquals("Ach Java", filteredEmployer.positions().get(0).projects().get(0).achievements().get(0).name());
+
+        assertEquals(1, filtered.keyAchievements().size());
+        assertEquals("Ach Java", filtered.keyAchievements().get(0).name());
+
+        assertEquals(1, filtered.technicalSkills().get("Languages").size());
+        assertEquals("Java", filtered.technicalSkills().get("Languages").get(0).name());
+
+        assertEquals(1, filtered.tags().size());
+        assertEquals("java", filtered.tags().get(0));
+    }
+
+    @Test
+    public void testSortOnly() {
+        Employer older = new Employer("OldCo", "City",
+                new Period(LocalDate.of(2019, 1, 1), LocalDate.of(2020, 12, 31)),
+                List.of());
+
+        Employer newer = new Employer("NewCo", "City",
+                new Period(LocalDate.of(2021, 1, 1), LocalDate.of(2023, 12, 31)),
+                List.of());
+
+        Position oldPosition = new Position("Old Dev",
+                new Period(LocalDate.of(2019, 1, 1), LocalDate.of(2019, 12, 31)),
+                "desc", List.of(), List.of());
+
+        Position newPosition = new Position("New Dev",
+                new Period(LocalDate.of(2023, 1, 1), LocalDate.of(2024, 12, 31)),
+                "desc", List.of(), List.of());
+
+        older = older.withPositions(List.of(oldPosition));
+        newer = newer.withPositions(List.of(newPosition));
+
+        CVProject unsorted = new CVProject("Tester")
+                .withEmployers(List.of(older, newer));
+
+        CVProject sorted = CVFilter.sortByDateDescending(unsorted);
+
+        // Check employers are sorted
+        assertEquals("NewCo", sorted.employers().get(0).name());
+        assertEquals("OldCo", sorted.employers().get(1).name());
+
+        // Check positions are sorted
+        List<Position> sortedPositions = sorted.employers().get(0).positions();
+        assertEquals("New Dev", sortedPositions.get(0).title());
+    }
+
+    @Test
+    public void testFilterAndSortTogether() {
+        // Combine both behaviors in one pipeline
+        Employer emp1 = new Employer("A", "Loc", new Period(LocalDate.of(2021, 1, 1), LocalDate.of(2022, 12, 31)),
+                List.of(new Position("P1",
+                        new Period(LocalDate.of(2021, 1, 1), LocalDate.of(2022, 12, 31)),
+                        "desc", List.of(),
+                        List.of(new Project("Project A", "desc",
+                                List.of(new Achievement("Ach A", List.of("java"))), List.of("java")))))
         );
 
-        // --- Employer B: period ends 2022-12-31, has no positions (for testing sorting only) ---
-        Employer employerB = new Employer(
-                "CompanyB",
-                "CityB",
-                new Period(LocalDate.of(2021, 1, 1), LocalDate.of(2022, 12, 31)),
-                List.of()
+        Employer emp2 = new Employer("B", "Loc", new Period(LocalDate.of(2023, 1, 1), LocalDate.of(2024, 12, 31)),
+                List.of(new Position("P2",
+                        new Period(LocalDate.of(2023, 1, 1), LocalDate.of(2024, 12, 31)),
+                        "desc", List.of(),
+                        List.of(new Project("Project B", "desc",
+                                List.of(new Achievement("Ach B", List.of("python"))), List.of("python")))))
         );
 
-        // --- Top‐level Achievements ---
-        List<Achievement> topAchievements = List.of(achJava, achPython);
+        CVProject base = new CVProject("Tester")
+                .withEmployers(List.of(emp1, emp2));
 
-        // --- Technical Skills: one category “Languages” with two skills ---
-        Skill skillJava = new Skill("Java", List.of("java"));
-        Skill skillPython = new Skill("Python", List.of("python"));
-        Map<String, List<Skill>> technicalSkills = Map.of(
-                "Languages",
-                List.of(skillJava, skillPython)
-        );
+        CVProject filteredThenSorted = CVFilter.sortByDateDescending(CVFilter.filter(base, List.of("java")));
 
-        // --- Top‐level CV tags ---
-        List<String> cvTags = List.of("java", "management");
-
-        // --- Construct the base CVProject with employers in reversed order (to test sorting) ---
-        CVProject baseCv = new CVProject("John Doe")
-                .withEmployers(List.of(employerB, employerA))
-                .withKeyAchievements(topAchievements)
-                .withTechnicalSkills(technicalSkills)
-                .withTags(cvTags);
-
-        // --- Apply filter: only include items tagged “java” ---
-        CVProject filteredCv = CVFilter.filter(baseCv, List.of("java"));
-
-        // --- 1. Verify employers are sorted by most‐recent end date (employerA first) ---
-        assertEquals("Should still include both employers (with filtered positions).", 2, filteredCv.employers().size());
-        assertEquals(
-                "Employer A should come before Employer B because its end date is later (2023-12-31 vs 2022-12-31).",
-                "CompanyA",
-                filteredCv.employers().get(0).name()
-        );
-        assertEquals("CompanyB", filteredCv.employers().get(1).name());
-
-        // --- 2. Verify positions:
-        //     - Employer A has one position; Employer B has none.
-        //     - Within Employer A’s position, only the Java project remains ---
-        Employer filteredA = filteredCv.employers().get(0);
-        assertEquals("Employer A should still have one position.", 1, filteredA.positions().size());
-
-        Position filteredPosition = filteredA.positions().get(0);
-        assertEquals("Developer", filteredPosition.title());
-        // Two projects originally; Python‐tagged project should be filtered out
-        assertEquals("Only one project (the one tagged “java”) should remain.", 1, filteredPosition.projects().size());
-        assertEquals("Project Java", filteredPosition.projects().get(0).title());
-
-        // Employer B had no positions to begin with, so its list stays empty
-        Employer filteredB = filteredCv.employers().get(1);
-        assertTrue("Employer B should have no positions.", filteredB.positions().isEmpty());
-
-        // --- 3. Verify nested achievements: only the Java achievement remains within the kept Java project ---
-        Project keptProject = filteredPosition.projects().get(0);
-        assertEquals(
-                "The Java project’s achievements should be filtered to only those tagged “java”.",
-                1,
-                keptProject.achievements().size()
-        );
-        assertEquals("Achievement Java", keptProject.achievements().get(0).name());
-
-        // --- 4. Verify top‐level achievements were filtered by tag “java” ---
-        assertEquals(
-                "Top‐level achievements should be filtered so only the one tagged “java” remains.",
-                1,
-                filteredCv.keyAchievements().size()
-        );
-        assertEquals("Achievement Java", filteredCv.keyAchievements().get(0).name());
-
-        // --- 5. Verify technicalSkills: “Python” skill is removed, “Java” remains ---
-        assertTrue("Category “Languages” should still exist.", filteredCv.technicalSkills().containsKey("Languages"));
-        List<Skill> filteredLangSkills = filteredCv.technicalSkills().get("Languages");
-        assertEquals("Only the Java skill should remain under “Languages”.", 1, filteredLangSkills.size());
-        assertEquals("Java", filteredLangSkills.get(0).name());
-
-        // --- 6. Verify top‐level CV tags: only “java” remains, “management” is dropped ---
-        assertEquals("Only “java” should remain in the top‐level CV tags.", 1, filteredCv.tags().size());
-        assertEquals("java", filteredCv.tags().get(0));
+        // Only emp1 should remain
+        assertEquals(1, filteredThenSorted.employers().size());
+        assertEquals("A", filteredThenSorted.employers().get(0).name());
     }
 }

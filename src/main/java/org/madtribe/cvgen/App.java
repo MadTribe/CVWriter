@@ -90,10 +90,13 @@ public class App implements Runnable{
                 System.out.println(project.tags());
             }
 
-            if (project != null && !filterTags.equalsIgnoreCase("")){
-                project = CVFilter.filter(project, Arrays.asList(filterTags.split(",")));
-            }
+            if (project != null ) {
 
+                if (!filterTags.equalsIgnoreCase("")) {
+                    project = CVFilter.filter(project, Arrays.asList(filterTags.split(",")));
+                }
+                project = CVFilter.sortByDateDescending(project);
+            }
 
             if (outputFile != null && project != null ) {
                 CVRenderer renderer = new CVRenderer();
